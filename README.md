@@ -6,7 +6,7 @@ Mobile-first shared sales app for the November 2026 exhibition. Sales are stored
 
 1. Use Node.js 20 or newer and install dependencies with `npm install`.
 2. Copy `.env.example` to `.env.local` and fill in the Supabase project URL, anon key and service-role key. The service-role key stays server-side and must never be prefixed with `NEXT_PUBLIC_`.
-3. Apply `supabase/migrations/001_initial.sql` in the Supabase SQL Editor (or with the Supabase CLI). It creates the products, sale and audit tables, RPCs, RLS policies, realtime publication and daily-summary setting.
+3. Apply SQL files in `supabase/migrations` in numeric order. This creates the products, sale and audit tables, RPCs, RLS policies, realtime publication, and removes the old summary-schedule setting if it exists.
 4. In Supabase Authentication → Sign In / Providers, enable **Anonymous sign-ins**. The app creates an anonymous session on each phone; there is no login screen or shared password. Supabase recommends CAPTCHA/Turnstile to limit anonymous-account abuse; enable it only if you accept an initial challenge on devices. The database grants the same shared POS access to authenticated sessions, and no operator identity is displayed or attached to sales.
 5. Run `npm run dev` and open the shown LAN address on phones connected to the same network. For push, use HTTPS (localhost is also accepted by browsers).
 
@@ -22,15 +22,13 @@ The app uses Supabase anonymous sign-in silently in the background so Row Level 
 
 ## Web Push setup
 
-Generate VAPID keys, for example with `npx web-push generate-vapid-keys`. Set `VAPID_PUBLIC_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (same public value), `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` in local and Vercel environment variables. Keep the private key server-only. The `push_subscriptions` table stores subscribed device endpoints. Devices opt in from Dashboard → Team notifications. New-sale push is sent by the server route after a committed sale. The daily summary cron checks the configured IST time (default 21:00) every 15 minutes and sends once per day to active subscriptions.
-
-The configured Vercel schedule runs every 15 minutes and requires a Vercel plan that allows that frequency (Pro or Enterprise). Vercel Hobby cron runs at most once daily with up to 59 minutes of timing variance, so it cannot honor a configurable daily time reliably. For Hobby, remove the `crons` entry or change it to a once-daily schedule and accept the timing limit, or use an external scheduler every 15 minutes. The cron route is protected by `CRON_SECRET`; external requests must send `Authorization: Bearer <CRON_SECRET>`.
+Generate VAPID keys, for example with `npx web-push generate-vapid-keys`. Set `VAPID_PUBLIC_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (same public value), `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` in local and Vercel environment variables. Keep the private key server-only. The `push_subscriptions` table stores subscribed device endpoints. Devices opt in from Dashboard → Team notifications. New-sale push is sent by the server route after a committed sale. The Reports section still provides a manual daily closing summary that can be shared from the phone.
 
 ## Deploy to Vercel
 
 1. Push this project to a Git repository and import it in Vercel.
 2. Add all values from `.env.example` in Vercel Project Settings → Environment Variables. Set the Supabase values for Production and Preview only if each environment has the intended shared database.
-3. Deploy. The `vercel.json` schedule calls the daily-summary endpoint; configure the cron secret above.
+3. Deploy. No cron job or cron secret is needed.
 4. Open the deployed HTTPS URL. The app connects automatically without a login screen. Share the URL with the team.
 
 ## Install on phones
@@ -46,4 +44,4 @@ Corrections are made from Transactions → transaction detail → Edit transacti
 
 ## Operational limits
 
-An active internet connection is required to record sales; offline sales are disabled and visibly marked. A sale is only shown as saved after Supabase confirms the atomic RPC. The app does not queue unsaved sales. Browser/OS push support and notification permission are required for notifications. The current export is CSV (Excel opens it); XLSX generation is not included.
+An active internet connection is required to record sales; offline sales are disabled and visibly marked. A sale is only shown as saved after Supabase confirms the atomic RPC. The app does not queue unsaved sales. Browser/OS push support and notification permission are required for notifications. The current export is CSV (Excel opens it); XLSX generation is not included. Daily summary notifications are not scheduled; the closing summary is available to share manually in Reports.

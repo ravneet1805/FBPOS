@@ -110,29 +110,20 @@ create table public.push_subscriptions (
   subscription jsonb not null,
   created_at timestamptz not null default now()
 );
-create table public.daily_summary_settings (
-  id integer primary key default 1 check (id = 1),
-  summary_time time not null default '21:00',
-  last_sent_date date
-);
-insert into public.daily_summary_settings(id) values(1) on conflict do nothing;
 
 alter table public.products enable row level security;
 alter table public.sales enable row level security;
 alter table public.sale_audit enable row level security;
 alter table public.push_subscriptions enable row level security;
-alter table public.daily_summary_settings enable row level security;
 create policy "signed in can read products" on products for select to authenticated using (true);
 create policy "signed in can read sales" on sales for select to authenticated using (true);
 create policy "signed in can delete sales" on sales for delete to authenticated using (true);
 create policy "signed in can read audit" on sale_audit for select to authenticated using (true);
 create policy "signed in can manage subscriptions" on push_subscriptions for all to authenticated using (true) with check (true);
-create policy "signed in can manage summary setting" on daily_summary_settings for all to authenticated using (true) with check (true);
 grant select on public.products to authenticated;
 grant select, delete on public.sales to authenticated;
 grant select on public.sale_audit to authenticated;
 grant select, insert, update, delete on public.push_subscriptions to authenticated;
-grant select, insert, update on public.daily_summary_settings to authenticated;
 grant usage, select on sequence public.sale_audit_id_seq to authenticated;
 grant execute on function public.create_sale(uuid,text,integer,text,text,integer) to authenticated;
 grant execute on function public.update_sale(uuid,text,integer,text,text,integer) to authenticated;
