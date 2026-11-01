@@ -1,4 +1,4 @@
-# Stall POS
+# FOR BROTHERS
 
 Mobile-first shared sales app for the November 2026 exhibition. Sales are stored in Supabase in whole rupees, with server-side price and discount calculations, India-time reports, an audit trail, live updates, PWA installation and optional Web Push.
 
