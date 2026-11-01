@@ -9,8 +9,10 @@ export async function POST(req:NextRequest){
   if(authError||!user)return NextResponse.json({error:'Unauthorized'},{status:401});
   if(!process.env.VAPID_PUBLIC_KEY||!process.env.VAPID_PRIVATE_KEY)return NextResponse.json({error:'Push is not configured'},{status:503});
   const {saleId}=await req.json();
-  const {data:existingSale}=await admin.from('sales').select('id').eq('id',saleId).maybeSingle();
+  const {data:existingSale,error:saleLookupError}=await admin.from('sales').select('id,order_number').eq('id',saleId).maybeSingle();
+  if(saleLookupError)return NextResponse.json({error:'Order number schema is unavailable. Apply Supabase migration 007.'},{status:503});
   if(!existingSale)return NextResponse.json({error:'Sale not found'},{status:404});
+  if(!existingSale.order_number)return NextResponse.json({error:'Order number is unavailable. Apply Supabase migration 007.'},{status:503});
   const {data:subs,error:subscriptionError}=await admin.from('push_subscriptions').select('id,subscription');
   if(subscriptionError)return NextResponse.json({error:'Could not load notification subscriptions'},{status:503});
   if(!subs?.length)return NextResponse.json({ok:true,sent:0});
