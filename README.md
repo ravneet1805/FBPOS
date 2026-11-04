@@ -14,7 +14,7 @@ Mobile-first shared sales app for the November 2026 exhibition. Sales are stored
 
 The app uses Supabase anonymous sign-in silently in the background so Row Level Security remains enabled without showing a login page. Each device gets an anonymous session; all sessions share the same sales and settings. Enable anonymous sign-ins in the Supabase Auth provider settings before use.
 
-- The `create_sale` and `update_sale` RPCs read the current product price and calculate gross, discount and final amounts in PostgreSQL. Each sale snapshots the product name and unit price. Monetary fields use integer rupees.
+- The `create_sale` and `update_sale` RPCs calculate gross, discount and final amounts in PostgreSQL using the unit price selected for that sale. Unit price defaults to the product's standard price, can be changed in the sale panel, and can be corrected in transaction editing. Each sale snapshots the product name and actual unit price. Monetary fields use integer rupees.
 - Each sale receives a short, globally increasing order number with a product prefix, such as `BLA-0042`, `WAI-0043` or `PER-0044`. The internal UUID remains private to database operations. Existing sales are assigned readable references in timestamp order.
 - Sale creation carries a unique idempotency UUID; retries with the same key return the saved row rather than creating a second sale.
 - Sales have realtime publication enabled. The app listens for database changes and refreshes the live views; it also refreshes periodically as a recovery path.
